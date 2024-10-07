@@ -31,7 +31,9 @@ class AuthController extends Controller
 
         event(new Registered($user));
 
-        return redirect()->route('login')->with('success', 'Registration successful. Please check your email to verify your account.');
+        Auth::login($user);
+
+        return redirect()->route('verification.notice');
     }
 
     public function showLoginForm()
@@ -40,30 +42,28 @@ class AuthController extends Controller
     }
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'email' => 'required|string|email',
+        'password' => 'required|string',
+    ]);
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-
-            if (is_null(Auth::user()->email_verified_at)) {
-                Auth::logout();
-                return redirect()->route('login')->withErrors(['email' => 'Please verify your email address.']);
-            }
-
-            return redirect()->route('dashboard');
+    if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        
+        if (is_null(Auth::user()->email_verified_at)) {
+            Auth::logout();
+            return redirect()->route('login');
         }
 
-        return back()->withErrors(['email' => 'Invalid credentials.']);
+        return redirect()->route('dashboard');
     }
 
+    return back()->withErrors(['email' => 'Invalid credentials.']);
+}
     public function dashboard()
     {
         return view('backend.dashboard');
     }
-
     public function logout()
     {
         Auth::logout();
